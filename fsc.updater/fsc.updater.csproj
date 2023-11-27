@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net7.0;net6.0;net48</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<LangVersion>11</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="_Updater.exe" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PublishMarkerFile>..\_Updater\bin\PublishExe.marker</PublishMarkerFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BuildInParallel>false</BuildInParallel>
+  </PropertyGroup>
+	
+  <Target Name="PublishExe" BeforeTargets="BeforeBuild" Condition="!Exists('$(PublishMarkerFile)')">
+    <Exec Command="dotnet publish &quot;..\_Updater\_Updater.csproj&quot; -c Release" />
+    <WriteLinesToFile File="$(PublishMarkerFile)" Lines="Published" Overwrite="true" />
+	<OnError ExecuteTargets="CleanPublishMarker" />
+  </Target>
+
+  <Target Name="CleanPublishMarker" AfterTargets="Clean">
+    <Delete Files="$(PublishMarkerFile)" />
+  </Target>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\_Updater\bin\Release\net7.0\win-x64\publish\_Updater.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+
+</Project>
