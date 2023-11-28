@@ -17,6 +17,15 @@
 
   <PropertyGroup>
     <BuildInParallel>false</BuildInParallel>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>FSC-Updater</Title>
+    <Authors>Fabian Schlüter</Authors>
+    <Description>Automate your .NET application updates with ease. This library simplifies app restarts and version transitions with minimal integration.
+</Description>
+    <Copyright>Copyright 2023 by Fabian Schlüter</Copyright>
+    <PackageProjectUrl>https://github.com/Fabian2000/fsc.updater/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Fabian2000/fsc.updater.git</RepositoryUrl>
+    <PackageTags>AutoUpdate, Windows, ApplicationLifecycle, SoftwareUpdate, Deployment, VersionControl, Application, Updates, Updater, Automatic, Automate, Software, Version</PackageTags>
   </PropertyGroup>
 	
   <Target Name="PublishExe" BeforeTargets="BeforeBuild" Condition="!Exists('$(PublishMarkerFile)')">
