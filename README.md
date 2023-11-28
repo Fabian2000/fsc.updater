@@ -3,6 +3,8 @@
 ## Introduction
 `fsc.updater` is an auto-updating solution for .NET applications. It provides an easy-to-use library to integrate update functionality into your applications, ensuring that the end-users always have the latest version running.
 
+_Made for windows only_
+
 ## How to Use
 To use `fsc.updater` in your project, include the `FSC.Updater` namespace in your application and follow the sample code provided below.
 
