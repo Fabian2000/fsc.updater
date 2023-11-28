@@ -26,6 +26,10 @@
     <PackageProjectUrl>https://github.com/Fabian2000/fsc.updater/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Fabian2000/fsc.updater.git</RepositoryUrl>
     <PackageTags>AutoUpdate, Windows, ApplicationLifecycle, SoftwareUpdate, Deployment, VersionControl, Application, Updates, Updater, Automatic, Automate, Software, Version</PackageTags>
+    <PackageIcon>icon_cropped.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageId>FSC-Updater</PackageId>
   </PropertyGroup>
 	
   <Target Name="PublishExe" BeforeTargets="BeforeBuild" Condition="!Exists('$(PublishMarkerFile)')">
@@ -40,6 +44,21 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\_Updater\bin\Release\net7.0\win-x64\publish\_Updater.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\icon_cropped.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
