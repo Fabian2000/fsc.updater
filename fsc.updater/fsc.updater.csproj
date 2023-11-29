@@ -5,6 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<LangVersion>11</LangVersion>
+	<Version>1.0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +31,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageId>FSC-Updater</PackageId>
+    <PackageReleaseNotes>Downloads will now go into a temp folder. This fixes the problem of downloading into C: directories, if a program is/was located there, which are mostly protected against writing without permission</PackageReleaseNotes>
   </PropertyGroup>
 	
   <Target Name="PublishExe" BeforeTargets="BeforeBuild" Condition="!Exists('$(PublishMarkerFile)')">

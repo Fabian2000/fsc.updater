@@ -67,6 +67,8 @@ namespace FSC.Updater
 
             string filePath = Path.ChangeExtension(exe.Location, "update.zip");
 
+            filePath = Path.Combine(Path.GetTempPath(), Path.GetFileName(filePath));
+
             FileInfo zipInfo = new FileInfo(filePath);
 
             if (string.IsNullOrWhiteSpace(zipInfo.DirectoryName))
