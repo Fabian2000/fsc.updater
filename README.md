@@ -28,6 +28,7 @@ namespace LiveTest
             if (await updater.CheckForUpdateAsync("https://raw.githubusercontent.com/.../.../main/version.txt"))
             {
                 await updater.DownloadUpdateAsync("https://github.com/.../.../raw/main/LiveTest.zip");
+                // "LiveTest.exe is an example. Please use an absolute path instead."
                 updater.RestartApplication(new System.Diagnostics.ProcessStartInfo("LiveTest.exe", "HelloWorld"));
             }
             Console.ReadKey();
