@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace FSC.Updater
 {
@@ -6,15 +8,13 @@ namespace FSC.Updater
     {
         internal static SerializablePSI FromProcessStartInfo(ProcessStartInfo psi)
         {
-            return new SerializablePSI
+            SerializablePSI spsi = new SerializablePSI
             {
                 Arguments = psi.Arguments,
                 CreateNoWindow = psi.CreateNoWindow,
-                Domain = psi.Domain,
                 ErrorDialog = psi.ErrorDialog,
                 //ErrorDialogParentHandle = (nint)psi.ErrorDialogParentHandle,
                 FileName = psi.FileName,
-                LoadUserProfile = psi.LoadUserProfile,
                 RedirectStandardError = psi.RedirectStandardError,
                 RedirectStandardInput = psi.RedirectStandardInput,
                 RedirectStandardOutput = psi.RedirectStandardOutput,
@@ -23,12 +23,24 @@ namespace FSC.Updater
                 Verb = psi.Verb,
                 ProcessWindowStyle = psi.WindowStyle,
                 WorkingDirectory = psi.WorkingDirectory,
-#if NET6_0_OR_GREATER
+#if NET5_0_OR_GREATER
                 StandardErrorEncoding = psi.StandardErrorEncoding?.CodePage ?? -1,
                 StandardInputEncoding = psi.StandardInputEncoding?.CodePage ?? -1,
                 StandardOutputEncoding = psi.StandardOutputEncoding?.CodePage ?? -1
 #endif
             };
+
+#if NET5_0_OR_GREATER
+            if (OperatingSystem.IsWindows())
+#else
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+#endif
+            {
+                spsi.Domain = psi.Domain;
+                spsi.LoadUserProfile = psi.LoadUserProfile;
+            }
+
+            return spsi;
         }
     }
 }

@@ -7,17 +7,13 @@ namespace _Updater
     {
         internal static ProcessStartInfo ToProcessStartInfo(SerializablePSI serializablePSI)
         {
-            return new ProcessStartInfo
+            ProcessStartInfo psi = new ProcessStartInfo
             {
                 Arguments = serializablePSI.Arguments,
                 CreateNoWindow = serializablePSI.CreateNoWindow,
-                Domain = serializablePSI.Domain,
                 ErrorDialog = serializablePSI.ErrorDialog,
                 //ErrorDialogParentHandle = (IntPtr)serializablePSI.ErrorDialogParentHandle,
                 FileName = serializablePSI.FileName,
-                LoadUserProfile = serializablePSI.LoadUserProfile,
-                Password = serializablePSI.Password,
-                PasswordInClearText = serializablePSI.PasswordClearText,
                 RedirectStandardError = serializablePSI.RedirectStandardError,
                 RedirectStandardInput = serializablePSI.RedirectStandardInput,
                 RedirectStandardOutput = serializablePSI.RedirectStandardOutput,
@@ -30,6 +26,16 @@ namespace _Updater
                 WindowStyle = serializablePSI.ProcessWindowStyle,
                 WorkingDirectory = serializablePSI.WorkingDirectory
             };
+
+            if (OperatingSystem.IsWindows())
+            {
+                psi.Domain = serializablePSI.Domain;
+                psi.LoadUserProfile = serializablePSI.LoadUserProfile;
+                psi.Password = serializablePSI.Password;
+                psi.PasswordInClearText = serializablePSI.PasswordClearText;
+            }
+
+            return psi;
         }
     }
 }

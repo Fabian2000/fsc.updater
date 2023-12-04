@@ -10,39 +10,65 @@ namespace _Updater
     {
         private static ProcessArgs? _processArgs;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            if (args.Length == 0)
+            try
             {
-                Environment.Exit(1);
+                if (args.Length == 0)
+                {
+                    Environment.Exit(1);
+                }
+
+                string argument = Encoding.UTF8.GetString(Convert.FromBase64String(args[0]));
+
+                _processArgs = JsonSerializer.Deserialize(argument, ProcessArgsJsonContext.Default.ProcessArgs);
+
+                if (_processArgs is null)
+                {
+                    Environment.Exit(1);
+                }
+
+                ProcessStartInfo processStartInfo = PSIParser.ToProcessStartInfo(_processArgs.RestartProcessInformation ?? new SerializablePSI());
+
+                if (_processArgs.ProcessId > -1)
+                {
+                    for (int i = 0; i < 30; i++)
+                    {
+                        if (!Process.GetProcesses().Any(x => x.Id == _processArgs.ProcessId))
+                        {
+                            break;
+                        }
+
+                        await Task.Delay(2_000);
+                        try
+                        {
+                            Process.GetProcessById(_processArgs.ProcessId).Close();
+                            Process.GetProcessById(_processArgs.ProcessId).CloseMainWindow();
+                        }
+                        catch { }
+                    }
+                }
+
+                string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDirectory);
+
+                ZipFile.ExtractToDirectory(_processArgs!.UpdateZip ?? string.Empty, tempDirectory, true);
+
+                string targetDirectory = Path.GetDirectoryName(Path.GetFullPath(_processArgs.RestartProcessInformation?.FileName ?? string.Empty)) ?? string.Empty;
+
+                ReplaceFiles(tempDirectory, targetDirectory);
+
+                Directory.Delete(tempDirectory, true);
+                File.Delete(_processArgs?.UpdateZip ?? string.Empty);
+
+                Process.Start(processStartInfo);
+
+                SelfDestruct(Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty);
             }
-
-            string argument = Encoding.UTF8.GetString(Convert.FromBase64String(args[0]));
-
-            _processArgs = JsonSerializer.Deserialize(argument, ProcessArgsJsonContext.Default.ProcessArgs);
-
-            if (_processArgs is null)
+            catch (Exception ex)
             {
-                Environment.Exit(1);
+                File.WriteAllText(Process.GetCurrentProcess().ProcessName + ".log", ex.Message);
             }
-
-            ProcessStartInfo processStartInfo = PSIParser.ToProcessStartInfo(_processArgs.RestartProcessInformation ?? new SerializablePSI());
-
-            string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(tempDirectory);
-
-            ZipFile.ExtractToDirectory(_processArgs!.UpdateZip ?? string.Empty, tempDirectory, true);
-
-            string targetDirectory = Path.GetDirectoryName(Path.GetFullPath(_processArgs.RestartProcessInformation?.FileName ?? string.Empty)) ?? string.Empty;
-
-            ReplaceFiles(tempDirectory, targetDirectory);
-
-            Directory.Delete(tempDirectory, true);
-            File.Delete(_processArgs?.UpdateZip ?? string.Empty);
-
-            Process.Start(processStartInfo);
-
-            SelfDestruct(Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty);
         }
 
         private static void ReplaceFiles(string sourceDirectory, string targetDirectory)
@@ -51,25 +77,47 @@ namespace _Updater
                 .Select(path => path.Substring(sourceDirectory.Length)).ToHashSet();
             HashSet<string> targetFiles = Directory.GetFiles(targetDirectory, "*.*", SearchOption.AllDirectories)
                 .Select(path => path.Substring(targetDirectory.Length)).ToHashSet();
+            HashSet<string> targetDirectories = Directory.GetDirectories(targetDirectory, "*", SearchOption.AllDirectories)
+                .Select(path => path.Substring(targetDirectory.Length)).ToHashSet();
 
             foreach (string? file in targetFiles.Except(sourceFiles))
             {
-                if (Regex.IsMatch(file, _processArgs?.IgnoreFilesRegex ?? string.Empty))
+                if (Regex.IsMatch(file, string.IsNullOrWhiteSpace(_processArgs?.IgnoreFilesRegex) ? "^$" : _processArgs?.IgnoreFilesRegex ?? string.Empty))
                 {
                     continue;
                 }
 
-                File.Delete(Path.Combine(targetDirectory, file));
+                string targetFile = file.TrimStart('\\', '/').TrimStart('\\', '/');
+                targetFile = Path.Combine(targetDirectory, targetFile);
+                File.Delete(targetFile);
+            }
+
+            foreach (string dir in targetDirectories)
+            {
+                string fullPath = Path.GetFullPath(dir.TrimStart('\\', '/'));
+
+                if (!Directory.Exists(fullPath))
+                {
+                    continue;
+                }
+
+                bool containsFiles = Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories).Any();
+                
+                if (!containsFiles)
+                {
+                    Directory.Delete(fullPath, true);
+                }
             }
 
             foreach (string file in sourceFiles)
             {
-                string sourceFile = Path.Combine(sourceDirectory, file);
-                string targetFile = Path.Combine(targetDirectory, file);
+                string fileName = file.TrimStart('\\', '/').TrimStart('\\', '/');
+                string sourceFile = Path.Combine(sourceDirectory, fileName);
+                string targetFile = Path.Combine(targetDirectory, fileName);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(targetFile) ?? string.Empty);
 
-                if (Regex.IsMatch(Path.GetFileName(sourceFile), _processArgs?.IgnoreFilesRegex ?? string.Empty))
+                if (Regex.IsMatch(Path.GetFileName(sourceFile), string.IsNullOrWhiteSpace(_processArgs?.IgnoreFilesRegex) ? "^$" : _processArgs?.IgnoreFilesRegex ?? string.Empty))
                 {
                     continue;
                 }

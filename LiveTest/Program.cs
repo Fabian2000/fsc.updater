@@ -16,7 +16,8 @@ namespace LiveTest
             if (await updater.CheckForUpdateAsync("https://raw.githubusercontent.com/Fabian2000/Test/main/version.txt"))
             {
                 await updater.DownloadUpdateAsync("https://github.com/Fabian2000/Test/raw/main/LiveTest.zip");
-                updater.RestartApplication(new System.Diagnostics.ProcessStartInfo("LiveTest.exe", "Hallo Welt"));
+                string liveTestExe = Path.GetFullPath("LiveTest.exe");
+                updater.RestartApplication(new System.Diagnostics.ProcessStartInfo(liveTestExe, "Hallo Welt"), true, true);
             }
             Console.ReadKey();
         }
