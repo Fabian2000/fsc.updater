@@ -17,6 +17,10 @@ namespace FSC.Updater
     /// </summary>
     public class Updater
     {
+        /// <summary>
+        /// An event to get the download information
+        /// </summary>
+        public event EventHandler<UpdaterDownloadEventArgs>? DownloadProgressChanged;
         private string? _updateZip;
 
         /// <summary>
@@ -27,7 +31,7 @@ namespace FSC.Updater
         /// <exception cref="Exception">In case of errors, like HTTP, parsing or others, this exception will throw</exception>
         public async Task<bool> CheckForUpdateAsync(string versionInfoUrl)
         {
-            string newestVersion = await QuickHttp.GetAsync(versionInfoUrl);
+            string newestVersion = await new QuickHttp().GetAsync(versionInfoUrl);
             if (!Version.TryParse(newestVersion, out Version? version))
             {
                 throw new Exception("Unable to parse the version number");
@@ -91,7 +95,20 @@ namespace FSC.Updater
                 throw new Exception("DirectoryName of ZIP may not be null");
             }
 
-            await QuickHttp.DownloadFileAsync(updateZipFileUrl, zipInfo.DirectoryName, zipInfo.Name);
+            QuickHttp quickHttp = new QuickHttp();
+            
+            quickHttp.DownloadProgressChanged += (o, e) =>
+            {
+                UpdaterDownloadEventArgs args = new UpdaterDownloadEventArgs
+                {
+                    CurrentSize = e.CurrentSize,
+                    MaxSize = e.MaxSize,
+                    ProgressPercentage = e.ProgressPercentage
+                };
+                DownloadProgressChanged?.Invoke(this, args);
+            };
+
+            await quickHttp.DownloadFileAsync(updateZipFileUrl, zipInfo.DirectoryName, zipInfo.Name);
 
             _updateZip = zipInfo.FullName;
         }

@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace FSC.Updater
 {
-    internal static class QuickHttp
+    internal class QuickHttp
     {
-        internal static async Task<string> GetAsync(string url)
+        internal event EventHandler<UpdaterDownloadEventArgs>? DownloadProgressChanged;
+
+        internal async Task<string> GetAsync(string url)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -22,16 +24,18 @@ namespace FSC.Updater
             }
         }
 
-        internal static async Task DownloadFileAsync(string url, string targetDir, string fileName)
+        internal async Task DownloadFileAsync(string url, string targetDir, string fileName)
         {
             using (HttpClient client = new HttpClient())
             {
-                HttpResponseMessage response = await client.GetAsync(url);
+                HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new Exception($"Unable to download the file: {response.ReasonPhrase} & status code: {response.StatusCode}");
                 }
+
+                long totalBytes = response.Content.Headers.ContentLength.GetValueOrDefault(-1L);
 
                 string filePath = Path.Combine(targetDir, fileName);
 
@@ -39,7 +43,26 @@ namespace FSC.Updater
                 {
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                     {
-                        await responseStream.CopyToAsync(fileStream);
+                        byte[] buffer = new byte[8192];
+                        long totalReadBytes = 0;
+                        int bytesRead;
+
+                        while ((bytesRead = await responseStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                        {
+                            await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            totalReadBytes += bytesRead;
+
+                            double progressPercentage = totalBytes > 0 ? (double)totalReadBytes / totalBytes : -1;
+
+                            UpdaterDownloadEventArgs args = new UpdaterDownloadEventArgs
+                            {
+                                CurrentSize = totalReadBytes,
+                                MaxSize = totalBytes,
+                                ProgressPercentage = progressPercentage
+                            };
+
+                            DownloadProgressChanged?.Invoke(this, args);
+                        }
                     }
                 }
             }
